@@ -16,9 +16,30 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+def home(request):
+    """Route racine pour vérifier que l'API fonctionne"""
+    return JsonResponse({
+        "message": "Route Finder API is running",
+        "status": "success",
+        "version": "1.0",
+        "endpoints": {
+            "admin": "/admin/",
+            "api": "/api/",
+        }
+    })
+
+def health_check(request):
+    """Health check endpoint for monitoring"""
+    return JsonResponse({
+        "status": "healthy",
+        "service": "route-finder-api"
+    })
 
 urlpatterns = [
+    path('', home, name='home'),  # Route racine - corrige l'erreur 404
+    path('health/', health_check, name='health_check'),  # Health check
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
-

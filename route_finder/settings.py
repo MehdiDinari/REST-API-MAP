@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise en 2ème position
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -64,8 +65,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS settings - Configuration sécurisée pour Vercel
-CORS_ALLOW_ALL_ORIGINS = False  # Changé à False pour plus de sécurité
+# CORS settings - Configuration sécurisée
+CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -73,25 +74,26 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.3.3:3000",
 ]
 
-# Permettre tous les domaines Vercel
+# Permettre tous les domaines Vercel et autres domaines de production
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
     r"^https://.*\.vercel\.com$",
+    r"^https://.*\.netlify\.app$",  # Au cas où vous utilisez Netlify
 ]
 
-# Production security settings for Render
+# Configuration spécifique pour production sur Render
 if 'RENDER' in os.environ:
-    # Enable HTTPS redirect in production
-    SECURE_SSL_REDIRECT = True
+    # Sécurité HTTPS (commenté temporairement pour éviter les problèmes)
+    # SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     
-    # Additional security headers
+    # Headers de sécurité additionnels
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
     
-    # Set DEBUG to False in production
-    DEBUG = False
+    # Garder DEBUG True temporairement pour diagnostiquer les problèmes
+    # DEBUG = False
 
 ROOT_URLCONF = 'route_finder.urls'
 
@@ -117,7 +119,7 @@ WSGI_APPLICATION = 'route_finder.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Utilisation de MongoDB au lieu de la base de données par défaut
+# Utilisation de SQLite par défaut (Django standard)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -166,12 +168,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Static files configuration for production
-if 'RENDER' in os.environ:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    
-    # Add whitenoise for serving static files
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# Configuration des fichiers statiques pour production et développement
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# Configuration WhiteNoise pour servir les fichiers statiques
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
