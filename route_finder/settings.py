@@ -9,6 +9,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,12 +20,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-key-for-development-only'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-development-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
+# Dynamic ALLOWED_HOSTS configuration
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+
+# Add Render hostname automatically if deployed on Render
+if 'RENDER' in os.environ:
+    ALLOWED_HOSTS.extend([
+        os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
+        'rest-api-map.onrender.com'  # Backup explicit hostname
+    ])
+else:
+    # For local development, also allow the explicit hostname for testing
+    ALLOWED_HOSTS.append('rest-api-map.onrender.com')
 
 
 # Application definition
@@ -67,6 +79,20 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.com$",
 ]
 
+# Production security settings for Render
+if 'RENDER' in os.environ:
+    # Enable HTTPS redirect in production
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # Additional security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # Set DEBUG to False in production
+    DEBUG = False
+
 ROOT_URLCONF = 'route_finder.urls'
 
 TEMPLATES = [
@@ -100,8 +126,8 @@ DATABASES = {
 }
 
 # Configuration MongoDB
-MONGODB_URI = 'mongodb+srv://treshlol202:b6eiiFmV4qlAOE3y@cluster0.9sutx.mongodb.net/'
-MONGODB_NAME = 'RouteFinder'  # Le nom que vous venez de créer
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb+srv://treshlol202:b6eiiFmV4qlAOE3y@cluster0.9sutx.mongodb.net/')
+MONGODB_NAME = os.environ.get('MONGODB_NAME', 'RouteFinder')
 
 
 # Password validation
@@ -138,7 +164,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Static files configuration for production
+if 'RENDER' in os.environ:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    
+    # Add whitenoise for serving static files
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
