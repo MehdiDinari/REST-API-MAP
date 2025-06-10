@@ -1,0 +1,7 @@
+start_lat
+start_lon
+end_lat
+end_lon
+distance
+hour
+day_of_week
