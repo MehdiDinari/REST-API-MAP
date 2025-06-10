@@ -83,17 +83,13 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 # Configuration spécifique pour production sur Render
 if 'RENDER' in os.environ:
-    # Sécurité HTTPS (commenté temporairement pour éviter les problèmes)
-    # SECURE_SSL_REDIRECT = True
+    # Sécurité HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     
     # Headers de sécurité additionnels
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    
-    # Garder DEBUG True temporairement pour diagnostiquer les problèmes
-    # DEBUG = False
 
 ROOT_URLCONF = 'route_finder.urls'
 
@@ -170,6 +166,9 @@ STATIC_URL = '/static/'
 
 # Configuration des fichiers statiques pour production et développement
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Créer le dossier static s'il n'existe pas
+os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
